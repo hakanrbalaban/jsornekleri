@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sesli Işın Kılıcı (Blogger Uyumlu)</title>
+    <style>
+        /* Blogger Uyumlu CSS Başlangıcı */
+        .ls-app-container {
+            position: relative;
+            width: 100%;
+            height: 80vh; /* Blog içinde güzel durması için yükseklik */
+            min-height: 500px;
+            background-color: #1a1a1a;
+            color: white;
+            overflow: hidden;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            perspective: 1000px;
+            margin: 0 auto; /* Ortalamak için */
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        .ls-wrapper {
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+            margin-top: 50px;
+        }
+
+        .ls-handle {
+            width: 24px;
+            height: 100px;
+            background: linear-gradient(to right, #dcdcdc 0%, #888 20%, #222 30%, #222 70%, #888 80%, #dcdcdc 100%);
+            border-radius: 0 0 4px 4px;
+            position: relative;
+            z-index: 10;
+            box-shadow: 0 5px 10px rgba(0,0,0,0.5);
+        }
+
+        /* Kabza koruması */
+        .ls-handle::before {
+            content: '';
+            position: absolute;
+            top: -15px;
+            left: -8px;
+            width: 40px;
+            height: 15px;
+            background: linear-gradient(to right, #aaa, #ddd, #aaa);
+            border-radius: 4px 4px 0 0;
+            z-index: 10;
+        }
+
+        /* Kabza düğmesi */
+        .ls-handle::after {
+            content: '';
+            position: absolute;
+            top: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 10px;
+            height: 20px;
+            background: #a00;
+            border-radius: 2px;
+            box-shadow: inset 1px 1px 2px rgba(255,255,255,0.5);
+        }
+
+        .ls-blade {
+            position: absolute;
+            bottom: 85px;
+            left: 50%;
+            transform: translateX(-50%) scaleY(0);
+            transform-origin: bottom center;
+            width: 14px;
+            height: 350px;
+            background: white;
+            border-radius: 10px 10px 0 0;
+            transition: transform 0.3s cubic-bezier(0, 0.88, 0.65, 1.15);
+            z-index: 5;
+            box-shadow: 
+                0 0 10px 2px rgba(255, 255, 255, 0.8),
+                0 0 20px 5px var(--saber-color, #0f0),
+                0 0 40px 15px var(--saber-color, #0f0),
+                0 0 60px 25px var(--saber-color, #0f0);
+            opacity: 0;
+        }
+
+        .ls-app-container.active .ls-blade {
+            transform: translateX(-50%) scaleY(1);
+            opacity: 1;
+        }
+
+        .ls-controls {
+            position: absolute;
+            bottom: 20px;
+            display: flex;
+            gap: 15px;
+            z-index: 20;
+            padding: 10px;
+            background: rgba(0,0,0,0.3);
+            border-radius: 30px;
+        }
+
+        .ls-color-btn {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            border: 2px solid white;
+            cursor: pointer;
+            transition: transform 0.2s;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.5);
+        }
+        .ls-color-btn:hover { transform: scale(1.15); }
+        .ls-bg-red { background-color: #f00; box-shadow: 0 0 10px #f00; }
+        .ls-bg-green { background-color: #0f0; box-shadow: 0 0 10px #0f0; }
+        .ls-bg-blue { background-color: #00f; box-shadow: 0 0 10px #00f; }
+        .ls-bg-purple { background-color: #a0f; box-shadow: 0 0 10px #a0f; }
+
+        .ls-instruction {
+            position: absolute;
+            top: 15%;
+            text-align: center;
+            color: #ccc;
+            pointer-events: none;
+            transition: opacity 0.5s;
+            width: 100%;
+            padding: 0 20px;
+            box-sizing: border-box;
+        }
+        
+        .ls-instruction h2 {
+            font-size: 2rem;
+            margin: 0 0 10px 0;
+            font-weight: 700;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+        }
+
+        .ls-instruction p {
+            font-size: 1rem;
+            margin: 0;
+            opacity: 0.8;
+        }
+        
+        .ls-app-container.active .ls-instruction {
+            opacity: 0;
+        }
+        /* Blogger Uyumlu CSS Bitişi */
+    </style>
+</head>
+<body style="background-color: #333; margin: 0; padding: 20px; font-family: sans-serif;">
+
+    <!-- Blogger'a Kopyalanacak Alan Başlangıcı -->
+    <div class="ls-app-container" id="ls-app">
+        <div class="ls-instruction">
+            <h2>Işın Kılıcı</h2>
+            <p>Açmak/Kapatmak için ekrana tıklayın</p>
+        </div>
+
+        <div class="ls-wrapper">
+            <div class="ls-blade" id="ls-blade" style="--saber-color: #0f0;"></div>
+            <div class="ls-handle"></div>
+        </div>
+
+        <div class="ls-controls">
+            <div class="ls-color-btn ls-bg-green" data-color="#0f0"></div>
+            <div class="ls-color-btn ls-bg-blue" data-color="#00f"></div>
+            <div class="ls-color-btn ls-bg-red" data-color="#f00"></div>
+            <div class="ls-color-btn ls-bg-purple" data-color="#a0f"></div>
+        </div>
+    </div>
+
+    <script>
+        (function() {
+            // Değişkenleri kapsüllemek için IIFE kullanıyoruz (Blogger'daki diğer scriptlerle çakışmaması için)
+            let isActive = false;
+            let audioCtx;
+            let humNodes = [];
+            let humGainNode;
+            
+            const container = document.getElementById('ls-app');
+            const blade = document.getElementById('ls-blade');
+
+            function initAudio() {
+                if (!audioCtx) {
+                    const AudioContext = window.AudioContext || window.webkitAudioContext;
+                    audioCtx = new AudioContext();
+                }
+                if (audioCtx.state === 'suspended') {
+                    audioCtx.resume();
+                }
+            }
+
+            function createNoiseBuffer() {
+                if (!audioCtx) return null;
+                const bufferSize = audioCtx.sampleRate * 2.0; 
+                const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+                const data = buffer.getChannelData(0);
+                for (let i = 0; i < bufferSize; i++) {
+                    data[i] = Math.random() * 2 - 1;
+                }
+                return buffer;
+            }
+
+            function playIgnitionSound() {
+                initAudio();
+                const t = audioCtx.currentTime;
+                
+                const noiseBuffer = createNoiseBuffer();
+                const noise = audioCtx.createBufferSource();
+                noise.buffer = noiseBuffer;
+                const noiseFilter = audioCtx.createBiquadFilter();
+                noiseFilter.type = 'lowpass';
+                noiseFilter.frequency.setValueAtTime(100, t);
+                noiseFilter.frequency.exponentialRampToValueAtTime(2000, t + 0.1);
+                noiseFilter.frequency.exponentialRampToValueAtTime(1000, t + 0.4);
+                
+                const noiseGain = audioCtx.createGain();
+                noiseGain.gain.setValueAtTime(0.8, t);
+                noiseGain.gain.exponentialRampToValueAtTime(0.01, t + 0.5);
+                
+                noise.connect(noiseFilter);
+                noiseFilter.connect(noiseGain);
+                noiseGain.connect(audioCtx.destination);
+                noise.start(t);
+                
+                const osc = audioCtx.createOscillator();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(800, t);
+                osc.frequency.exponentialRampToValueAtTime(50, t + 0.5);
+                
+                const oscGain = audioCtx.createGain();
+                oscGain.gain.setValueAtTime(0.5, t);
+                oscGain.gain.exponentialRampToValueAtTime(0.01, t + 0.5);
+                
+                osc.connect(oscGain);
+                oscGain.connect(audioCtx.destination);
+                osc.start(t);
+                osc.stop(t + 0.6);
+            }
+
+            function playRetractSound() {
+                initAudio();
+                const t = audioCtx.currentTime;
+                
+                const osc = audioCtx.createOscillator();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(50, t);
+                osc.frequency.exponentialRampToValueAtTime(600, t + 0.3);
+                
+                const oscGain = audioCtx.createGain();
+                oscGain.gain.setValueAtTime(0.3, t);
+                oscGain.gain.exponentialRampToValueAtTime(0.001, t + 0.3);
+                
+                osc.connect(oscGain);
+                oscGain.connect(audioCtx.destination);
+                osc.start(t);
+                osc.stop(t + 0.4);
+                
+                const noiseBuffer = createNoiseBuffer();
+                const noise = audioCtx.createBufferSource();
+                noise.buffer = noiseBuffer;
+                const noiseFilter = audioCtx.createBiquadFilter();
+                noiseFilter.type = 'lowpass';
+                noiseFilter.frequency.value = 800;
+                
+                const noiseGain = audioCtx.createGain();
+                noiseGain.gain.setValueAtTime(0.3, t);
+                noiseGain.gain.exponentialRampToValueAtTime(0.001, t + 0.3);
+                
+                noise.connect(noiseFilter);
+                noiseFilter.connect(noiseGain);
+                noiseGain.connect(audioCtx.destination);
+                noise.start(t);
+            }
+
+            function startHum() {
+                if (humNodes.length > 0) return;
+                initAudio();
+                
+                const humOsc1 = audioCtx.createOscillator();
+                humOsc1.type = 'sawtooth';
+                humOsc1.frequency.value = 48; 
+                
+                const humOsc2 = audioCtx.createOscillator();
+                humOsc2.type = 'sine';
+                humOsc2.frequency.value = 50; 
+                
+                humGainNode = audioCtx.createGain();
+                humGainNode.gain.value = 0.08;
+                
+                const filter = audioCtx.createBiquadFilter();
+                filter.type = 'lowpass';
+                filter.frequency.value = 150;
+                
+                humOsc1.connect(filter);
+                humOsc2.connect(filter);
+                filter.connect(humGainNode);
+                humGainNode.connect(audioCtx.destination);
+                
+                humOsc1.start();
+                humOsc2.start();
+                
+                humNodes = [humOsc1, humOsc2];
+            }
+
+            function stopHum() {
+                if (humNodes.length > 0) {
+                    const t = audioCtx.currentTime;
+                    if(humGainNode) {
+                        humGainNode.gain.cancelScheduledValues(t);
+                        humGainNode.gain.setValueAtTime(humGainNode.gain.value, t);
+                        humGainNode.gain.exponentialRampToValueAtTime(0.001, t + 0.1);
+                    }
+                    
+                    humNodes.forEach(node => {
+                        node.stop(t + 0.1);
+                    });
+                    
+                    setTimeout(() => {
+                       humNodes.forEach(node => node.disconnect());
+                       humNodes = [];
+                       if (humGainNode) {
+                           humGainNode.disconnect();
+                           humGainNode = null;
+                       }
+                    }, 150);
+                }
+            }
+
+            function toggleSaber() {
+                isActive = !isActive;
+                
+                if (isActive) {
+                    container.classList.add('active');
+                    playIgnitionSound();
+                    setTimeout(startHum, 200);
+                } else {
+                    container.classList.remove('active');
+                    playRetractSound();
+                    stopHum();
+                }
+            }
+
+            function setColor(color) {
+                blade.style.setProperty('--saber-color', color);
+            }
+
+            // Event Listeners
+            container.addEventListener('click', (e) => {
+                if (!e.target.classList.contains('ls-color-btn')) {
+                    toggleSaber();
+                }
+            });
+            
+            const buttons = container.querySelectorAll('.ls-color-btn');
+            buttons.forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation(); // Renk değiştirirken kılıç kapanmasın
+                    const color = btn.getAttribute('data-color');
+                    setColor(color);
+                });
+            });
+
+            document.addEventListener('visibilitychange', () => {
+                if (document.hidden && isActive) {
+                   stopHum();
+                } else if (!document.hidden && isActive) {
+                   startHum();
+                }
+            });
+        })();
+    </script>
+    <!-- Blogger'a Kopyalanacak Alan Bitişi -->
+
+</body>
+</html>
